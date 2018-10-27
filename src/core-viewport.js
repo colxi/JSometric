@@ -1,104 +1,200 @@
+/*
+* @Author: colxi
+* @Date:   2018-10-24 10:41:32
+* @Last Modified by:   colxi
+* @Last Modified time: 2018-10-27 16:03:08
+*/
 
-import { Map } from './core-map.js';
-import { ViewportInfo } from './core-viewport-info.js';
+/* global Jsometric */
 
 
-let LAST_TIMESTAMP=  Date.now();
 let offsetX=0;
 let offsetY=0;
+//  ScaleScrollModifierX =
 
-
-const _onClickHandler =  function(e){
-    e.preventDefault();
-    let mouseEvent = Viewport.getMouseEventCoordinates(e);
-    Viewport.focusedTile = mouseEvent.tile;
-    Viewport.onClick(mouseEvent);
-};
-
-const _onMouseMoveHandler =  function(e){
-    e.preventDefault();
-    let mouseEvent = Viewport.getMouseEventCoordinates(e);
-    Viewport.focusedTile = mouseEvent.tile;
-    Viewport.mouseX= e.offsetX;
-    Viewport.mouseY= e.offsetY;
-    Viewport.onMouseMove(mouseEvent);
-};
-
-const _onWheelHandler = function(e){
-    e.preventDefault();
-    let direction = e.deltaY > 0 ? 1 : -1;
-    let zoomLevel = Viewport.scale + (Viewport.zoomFactor * direction);
-    Viewport.zoom(e.offsetX, e.offsetY, zoomLevel);
-};
-
-const Viewport = {
-    element     : document.getElementById('viewport'),
-   // context     : document.getElementById('viewport').getContext('2d'),
-    scrollX     : 0,
-    scrollY     : 0,
-    width       : window.innerWidth,
-    height      : window.innerHeight,
-    scale       : 1,
-    zoomMax     : 2,
-    zoomMin     : .20,
-    zoomFactor  : .02,
-    focusedTile : false,
-    mouseX      : 0,
-    mouseY      : 0,
-    showInfo    : true,
-    fps         : 0,
-    set smoothing(val){ Viewport.context.imageSmoothingEnabled=val },
-    get smoothing(){ return Viewport.context.imageSmoothingEnabled },
-
-    //
-    onClick     : function(){},
-    onMouseMove : function(){},
-    onTileRender: function(){},
-    onAfterRender : function(){},
+Jsometric.Viewport = class Viewport{
     /**
-     * [scale description]
-     * @return {[type]} [description]
+     * Viewport Constructor
+     * @param  {[offscreenCanvas]}  canvas
+     * @param  {[object]}           map
      */
-    zoom : function(x,y,level){
+    constructor( canvas, map ) {
+        // store offscreenCanvas reference
+        this.Canvas      = canvas;
+        // store Map reference
+        this.Map         = map;
+        // store Map Tileset reference
+        this.Tileset     = map.Tileset;
+        // store canvas 2d context
+        this.Context     = canvas.getContext('2d');
+        // Group to store Viewport Scroll absolute coordinates
+        this.Scroll = {
+            x : 0,
+            y : 0
+        };
+        // Group to store Viewport Scale properties
+        this.Scale = {
+            current : 1,
+            factor  : .02,
+            min     : .20,
+            max     : 2,
+        };
+        // Group to store Cartesian mouse coordiinates (if this.trackMouse=true)
+        this.Mouse = {
+            x : 0,
+            y : 0
+        };
+        // Internal Event handlers properties
+        this.__trackMouseHandler = undefined;
+        this.__mouseWheelZoomHandler = undefined;
+
+        //
+        // CONFIGURE Viewport Instance
+        //
+        // Track Mouse : trigger the trackMouse setter (async)
+        this.trackMouse = true;
+        // Mouze Wheel Zoom :  trigger the mouseWheelZoom setter (async)
+        this.mouseWheelZoom = true;
+
+    }
+
+    /**
+     * Get/Set Canvas Width property
+     */
+    get width(){ return this.Canvas.width }
+    set width( w ){
+        this.Canvas.width = w;
+        return true;
+    }
+
+    /**
+     * Get/Set Canvas height property
+     */
+    get height(){ return this.Canvas.height }
+    set height( h ){
+        this.Canvas.height = h;
+        return true;
+    }
+
+    /**
+     * Get/Set Canvas imageSmoothing property
+     */
+    get imageSmoothing(){ return this.Context.imageSmoothingEnabled }
+    set imageSmoothing( v ){
+        this.Context.imageSmoothingEnabled  = v;
+        return true;
+    }
+
+    /**
+     * Get/Set trackMouse property (adds/removes event listeners)
+     */
+    get trackMouse(){
+        // getter
+        return this.__trackMouseHandler ? true : false;
+    }
+    set trackMouse( v ){
+        // cast to Boolean
+        v = Boolean(v);
+
+        if( v ){
+            // if mouse tracking is not already active...
+            if( !this.__trackMouseHandler ){
+                // create the handler as an arrow function to preserve the 'this'
+                // context, when called back, on the event notification
+                this.__trackMouseHandler = (e)=>{
+                    this.Mouse.x = e.offsetX;
+                    this.Mouse.y = e.offsetY;
+                };
+                // add the listener
+                Jsometric.Events.addListener('mousemove',this.__trackMouseHandler);
+            }
+        }
+        else{
+            // if mouse tracking is active...
+            if( this.__trackMouseHandler ){
+                Jsometric.Events.removeListener('mousemove',this.__trackMouseHandler);
+                this.__trackMouseHandler = undefined;
+            }
+        }
+        // done!!
+        return v;
+    }
+
+    /**
+     * Get/Set mouseWheelZoom property (adds/removes event listeners)
+     */
+    get mouseWheelZoom(){
+        // getter
+        return this.__mouseWheelZoomHandler ? true : false;
+    }
+    set mouseWheelZoom( v ){
+        // cast to Boolean
+        v = Boolean(v);
+
+        if( v ){
+            // if mouse tracking is not already active...
+            if( !this.__mouseWheelZoomHandler ){
+                // create the handler as an arrow function to preserve the 'this'
+                // context, when called back, on the event notification
+                this.__mouseWheelZoomHandler = (e)=>{
+                    if( e.deltaY > 0 ) this.zoomIn(e.offsetX, e.offsetY);
+                    else this.zoomOut(e.offsetX, e.offsetY);
+                };
+                // add the listener
+                Jsometric.Events.addListener('mousewheel', this.__mouseWheelZoomHandler);
+            }
+        }
+        else{
+            // if mouse tracking is active...
+            if( this.__mouseWheelZoomHandler ){
+                Jsometric.Events.removeListener('mousewheel',this.__mouseWheelZoomHandler);
+                this.__mouseWheelZoomHandler = undefined;
+            }
+        }
+        // done!!
+        return v;
+    }
+
+    zoomIn(x, y){ return this.zoom(x, y, this.Scale.current + this.Scale.factor) }
+    zoomOut(x, y){ return this.zoom(x, y, this.Scale.current - this.Scale.factor) }
+    zoom(x, y, level){
         // default values : Zoom in the center of the viewport using defaultFactor
-        if( typeof x === 'undefined' ) x= Math.round( Viewport.width/2 );
-        if( typeof y === 'undefined' ) y= Math.round( Viewport.height/2 );
-        if( typeof level === 'undefined' ) level = Viewport.scale + Viewport.zoomFactor;
+        if( typeof x === 'undefined' ) x = Math.round( this.Canvas.width/2 );
+        if( typeof y === 'undefined' ) y = Math.round( this.Canvas.height/2 );
+        if( typeof level === 'undefined' ) level = this.Scale.current + this.Scale.factor;
 
         // calculate the value of the coordinate in scale 1:1
-        let unscaledX = ( x / Viewport.scale ) + offsetX;
-        let unscaledY = ( y / Viewport.scale ) + offsetY;
+        let unscaledX = ( x / this.Scale.current ) + offsetX;
+        let unscaledY = ( y / this.Scale.current ) + offsetY;
 
         // Round scale value to two decimals
-        Viewport.scale = level;
-        Viewport.scale = Math.round(Viewport.scale*100)/100;
+        this.Scale.current = level;
+        this.Scale.current = Math.round(this.Scale.current*100)/100;
 
         // apply zoom limits
-        if(Viewport.scale < Viewport.zoomMin) Viewport.scale = Viewport.zoomMin;
-        if(Viewport.scale > Viewport.zoomMax) Viewport.scale = Viewport.zoomMax;
+        if(this.Scale.current < this.Scale.min) this.Scale.current = this.Scale.min;
+        if(this.Scale.current > this.Scale.max) this.Scale.current = this.Scale.max;
 
         // calculate the new offsets (unscaled values)
-        offsetX = ( unscaledX - (x  / Viewport.scale) );
-        offsetY = ( unscaledY - (y / Viewport.scale) );
+        offsetX = ( unscaledX - (x / this.Scale.current) );
+        offsetY = ( unscaledY - (y / this.Scale.current) );
 
         // apply new scale in a non acumulative way
-        Viewport.context.setTransform(1, 0, 0, 1, 0, 0);
-        Viewport.context.scale(Viewport.scale, Viewport.scale);
-    },
-    /**
-     * [getMouseEventCoordinates description]
-     * @param  {[type]} e [description]
-     * @return {[type]}   [description]
-     */
-    getMouseEventCoordinates: function(e){
+        this.Context.setTransform(1, 0, 0, 1, 0, 0);
+        this.Context.scale(this.Scale.current, this.Scale.current);
+
+        return true;
+    }
+
+    getTileFromCoords(x, y){
         // calculate viewport mouse inner coordinates
-        const mapX = Viewport.mouseX + (( Viewport.scrollX + offsetX) * Viewport.scale );
-        const mapY = Viewport.mouseY + (( Viewport.scrollY + offsetY) * Viewport.scale );
+        const mapX = x + (( this.Scroll.x + offsetX) * this.Scale.current );
+        const mapY = y + (( this.Scroll.y + offsetY) * this.Scale.current );
 
         // get tile scaled sizes
-        let tilewidth  = Map.Tileset.tileWidth * Viewport.scale;
-        let tileHeight = Map.Tileset.tileHeight * Viewport.scale;
-        let tileOffset = Map.Tileset.tileOffset * Viewport.scale;
+        let tilewidth  = this.Tileset.tileWidth * this.Scale.current;
+        let tileHeight = this.Tileset.tileHeight * this.Scale.current;
+        let tileOffset = this.Tileset.tileOffset * this.Scale.current;
         // calculate tile  under mouse coordinates
         const tileRow = mapX/tilewidth + mapY/(tileHeight-tileOffset) -1 -1;
         const tileCol = mapX/( tileHeight-tileOffset) - tileRow - 1;
@@ -111,132 +207,28 @@ const Viewport = {
         // if no tile  found under the mouse, set to false
         if( tile.row<0 ||
             tile.column<0 ||
-            tile.row>Map.rows-1 ||
-            tile.column>Map.columns-1 ) tile = false;
+            tile.row>this.Map.rows-1 ||
+            tile.column>this.Map.columns-1 ) tile = false;
 
-        // done!
-        return {
-            event : e,
-            viewportX : e.offsetX,
-            viewportY : e.offsetY,
-            button: e.button,
-            tile  : tile
-        };
-    },
-    /**
-     * [getTileCoordinates description]
-     * @param  {[type]} _column [description]
-     * @param  {[type]} _row    [description]
-     * @return {[type]}         [description]
-     */
-    getTileCoordinates: function(_column,_row){
-        let x = (_row * Map.Tileset.tileWidth / 2) + (_column * Map.Tileset.tileWidth / 2) - Viewport.scrollX-offsetX;
-        let y = (_row * (Map.Tileset.tileHeight - Map.Tileset.tileOffset) / 2)-(_column * (Map.Tileset.tileHeight - Map.Tileset.tileOffset) / 2)  - Viewport.scrollY-offsetY;
+        return tile;
+    }
+
+    getTileCoordinates(column ,row){
+        let x = (row * this.Tileset.tileWidth / 2) + (column * this.Tileset.tileWidth / 2) - this.Scroll.x-offsetX;
+        let y = (row * (this.Tileset.tileHeight - this.Tileset.tileOffset) / 2)-(column * (this.Tileset.tileHeight - this.Tileset.tileOffset) / 2)  - this.Scroll.y-offsetY;
 
         // avoid floating point coordinates , convert to integers
-        x = (0.5 + x) | 0;
-        y = (0.5 + y) | 0;
+        x = Math.round(x) ;
+        y = Math.round(y);
 
         return {
             x : x,
             y : y
         };
-    },
-    /**
-     * [drawTile description]
-     * @param  {[type]} tileId [description]
-     * @param  {[type]} column [description]
-     * @param  {[type]} row    [description]
-     * @return {[type]}        [description]
-     */
-    drawTile: function(tileId, column, row){
-        // get canvas coordinates for the tile
-        let tileCoordinates = Viewport.getTileCoordinates( column, row );
-
-        // ignore request if tile is out of the viewport
-        if( tileCoordinates.x> Viewport.width/Viewport.scale   ||
-            tileCoordinates.x+Map.Tileset.tileWidth < 0        ||
-            tileCoordinates.y > Viewport.height/Viewport.scale ||
-            tileCoordinates.y+Map.Tileset.tileHeight < 0 ) return false;
-
-        let tile = Map.Tileset.tile[tileId];
-        Viewport.context.drawImage(
-            Map.Tileset.image,
-            tile[0]*Map.Tileset.tileWidth, //x
-            tile[1]*Map.Tileset.tileHeight, //y
-            Map.Tileset.tileWidth,
-            Map.Tileset.tileHeight,
-            tileCoordinates.x,
-            tileCoordinates.y,
-            Map.Tileset.tileWidth,
-            Map.Tileset.tileHeight
-        );
-    },
-    /**
-     * [render description]
-     * @return {[type]} [description]
-     */
-    render: function (){
-        // calculate fps
-        let now        = Date.now();
-        Viewport.fps   = Math.floor( 1000/ (now-LAST_TIMESTAMP) );
-        LAST_TIMESTAMP = now;
-        // clear viewport
-        Viewport.context.clearRect(0, 0, Viewport.width/Viewport.scale, Viewport.height/Viewport.scale);
-        //
-        // OPTIMIZATIONS TOSO:  render only inscreen tiles
-        // render in invisible canvas and dumpmcntent whennscene is ready
-        //
-        // Iterate columns  from right to left
-        for (var column =Map.columns-1; column >=0 ; column--){
-            // Iteraterows from top to bottom
-            for (var row =0; row <  Map.rows  ; row++){
-                // each cell can have multiple sprites, iterate them...
-                for (var layer = 0; layer <= Map.tileData[row][column].length -1; layer++){
-                    Viewport.drawTile( Map.tileData[row][column][layer], column, row);
-                    Viewport.onTileRender(column, row);
-
-                    //Viewport.context.globalAlpha = 0.10;
-                    //Viewport.drawTile( 7, column, row );
-                    //Viewport.context.globalAlpha = 1;
-                }
-            }
-        }
-
-        if(Viewport.showInfo) ViewportInfo.render();
-
-        if(Viewport.focusedTile){
-            Viewport.context.globalAlpha = 0.40;
-            Viewport.drawTile( 7, Viewport.focusedTile.column, Viewport.focusedTile.row );
-            Viewport.context.globalAlpha = 1;
-        }
-
-        requestAnimationFrame(Viewport.render);
     }
+
+
+
+
+
 };
-
-Viewport.element.addEventListener('mousedown', _onClickHandler, false );
-Viewport.element.addEventListener('mousemove', _onMouseMoveHandler, false );
-Viewport.element.addEventListener('wheel', _onWheelHandler, false);
-Viewport.element.addEventListener('contextmenu', function(e){ e.preventDefault() }, false );
-
-
-document.getElementById('viewport').width = window.innerWidth;
-document.getElementById('viewport').height = window.innerHeight;
-//Viewport.context.imageSmoothingEnabled=false;
-
-
-let renderer = new Worker('./src/renderer.js');
-var offscreen = Viewport.element.transferControlToOffscreen();
-//var ctx = Viewport.context.canvas.getContext('2d');
-//var imageData = ctx.createImageData(Viewport.width, Viewport.height);
-renderer.postMessage({ type:'create', data:offscreen },[offscreen]);
-/*
-renderer.onmessage = function (e) {
-    var ctx = Viewport.context.canvas.getContext('2d');
-    ctx.putImageData(e.data.image, 0, 0);
-};
-*/
-
-
-export { Viewport };
