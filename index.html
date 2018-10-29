@@ -13,6 +13,9 @@
             #viewport{
                 border:1px solid black;
                 cursor:pointer;
+                width:100%;
+                position: absolute;
+                height:100%
                 /*image-rendering: crisp-edges;  auto / pixelated */
             }
 
@@ -69,7 +72,8 @@
     </head>
     <body>
         <canvas id="viewport-info"  style="position:fixed;"></canvas>
-        <canvas id="viewport" ></canvas>
+        <canvas id="viewport" tabindex="1" ></canvas>
+
         <div id="container" style="display:none">
             <div tyle="float:left">
                 <canvas id="tools" width="320" height="430"></canvas>
@@ -84,4 +88,7 @@
         </div>
         <script src="test.js"></script>
     </body>
+    <script type="text/javascript">
+
+    </script>
 </html>

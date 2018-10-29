@@ -2,56 +2,40 @@
 * @Author: colxi
 * @Date:   2018-10-25 16:46:42
 * @Last Modified by:   colxi
-* @Last Modified time: 2018-10-27 16:03:39
+* @Last Modified time: 2018-10-29 02:22:19
 */
 
-//Viewport.onAnimationFrame( x=>{});
-
 let Viewport;
-let Map;
-
-class InputInterface{
-    constructor( options ){
-        this.__trackMouse = options.trackMouse || false;
-        this.__trackKeyboard = options.trackKeyboard || false;
-        this.Keys = {};
-        this.Mouse = {};
-
-    }
-
-
-
-};
-
 (async function(){
-    /*
-    Jsometric.Event.onKeyDown({
-        handler: (event)=>{
-            if(event.keyCode == 37) engine.moveScrollX(-10);
-            else if(event.keyCode == 38) engine.moveScrollY(-10);
-            else if(event.keyCode == 39) engine.moveScrollX(+10);
-            else if(event.keyCode == 40) engine.moveScrollY(+10);
-        },
-        target : 'window',
-        preventDefault : true,
-
-    });
-    */
-
-
     Jsometric.Request.logRequests=true;
     Jsometric.Request.logResponses=true;
-   // Jsometric.Request.logEvents=true;
-    let canvas           = await Jsometric.retrieveCanvas( '#viewport' );
-    let map              = await Jsometric.Map.load('demo-128');
-    let windowSize       = await Jsometric.getWindowSize();
-    Viewport  = new Jsometric.Viewport( canvas, map );
+    //  Jsometric.Request.logEvents=true;
+    //
+    //let _canvas = await Jsometric.createCanvas( '#container' );
+    Viewport = await new Jsometric.Viewport( '#viewport', 'demo-128' );
+    Viewport.edgeScrolling     = true;
+    Viewport.mouseWheelZoom    = true;
 
+    Jsometric.Events.addListener('keydown', e=>{
+        if(e.keyCode == 37)      Viewport.Scroll.x -= 10;
+        else if(e.keyCode == 38) Viewport.Scroll.y -= 10;
+        else if(e.keyCode == 39) Viewport.Scroll.x += 10;
+        else if(e.keyCode == 40) Viewport.Scroll.y += 10;
+    });
 
-    Viewport.width  = windowSize.width;
-    Viewport.height = windowSize.height;
+    // handle canvas right click
+    Jsometric.Events.addListener('click', e=>{
+        console.log(Viewport.Scroll.x, offsetX, Viewport.Scale.current);
+    });
 
+    // handle canvas left click
+    Jsometric.Events.addListener('contextmenu', e=>{
+        console.log('left click')  ;
+    });
 
-    Map =map;
-    Jsometric.Renderer.renderFrame();
+    function loop(){
+        Viewport.renderFrame();
+        requestAnimationFrame( loop );
+    }
+    loop()
 })();

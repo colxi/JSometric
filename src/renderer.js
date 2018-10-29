@@ -2,7 +2,7 @@
 * @Author: colxi
 * @Date:   2018-10-24 09:55:33
 * @Last Modified by:   colxi
-* @Last Modified time: 2018-10-27 13:35:22
+* @Last Modified time: 2018-10-29 02:05:24
 */
 
 const Jsometric = {};
@@ -17,7 +17,6 @@ Jsometric.getWindowSize = async function(){
 
 importScripts( 'core-map.js' );
 importScripts( 'core-tileset.js' );
-importScripts( 'core-renderer.js' );
 importScripts( 'core-viewport.js' );
 importScripts( 'core-request.js' );
 importScripts( 'core-events.js' );

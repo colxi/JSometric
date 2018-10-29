@@ -2,7 +2,7 @@
 * @Author: colxi
 * @Date:   2018-10-24 10:41:32
 * @Last Modified by:   colxi
-* @Last Modified time: 2018-10-27 15:44:09
+* @Last Modified time: 2018-10-27 23:25:53
 */
 
 let resolver={};
@@ -35,7 +35,7 @@ renderer.onmessage = function(msg){
         let result    = Jsometric[method]( ...args );
 
         // if result has been glagged as tranafereable, prepare transfer array
-        let transfer  = [];
+        let transfer  = []
         if( result instanceof Jsometric.TransferableObject ){
             transfer.push( result.data );
             result = result.data;
@@ -51,20 +51,42 @@ renderer.onmessage = function(msg){
     }
 };
 
+
+// create and dispatch the event
+var VIEWPORT_RESIZE_EVENT = new CustomEvent("viewportresize");
+
 let Jsometric={
     _canvas : undefined,
     TransferableObject : function( data ){
         if( !(this instanceof Jsometric.TransferableObject) ) throw new Error('Transferable Constructor must be called using \'new\'');
         this.data = data;
     },
+    findTransferableObjects : function( item ){
+        if( item instanceof Jsometric.TransferableObject ) return [ item.data ];
+        let transferables = [];
+        if( typeof item === 'object' || Array.isArray(item) ){
+            for( let key in item ){
+                if( typeof item === 'object'  && !item.hasOwnProperty(key) ) continue;
+                if( item[key] instanceof Jsometric.TransferableObject ) transferables.push( item[key].data );
+                if( typeof item[key]  === 'object' || Array.isArray( item[key] ) ){
+                    transferables = transferables.concat( Jsometric.extractTransferables( item[key] ) );
+                }
+            }
+        }
+        return transferables;
+    },
     _listenersCount : {},
     _eventListenerHandler : function(e){
         e.preventDefault();
         let data = {};
         let allowedTypes = ['string', 'undefined', 'number', 'boolean'];
-        for(key in e){
+        for(let key in e){
             if( allowedTypes.includes(typeof e[key]) ) data[key]=e[key];
-        };
+        }
+        if(e.type==='viewportresize'){
+            data.offsetWidth  = e.target.offsetWidth;
+            data.offsetHeight = e.target.offsetHeight;
+        }
         renderer.postMessage({
             type    : 'event',
             name    : e.type,
@@ -90,26 +112,23 @@ let Jsometric={
         Jsometric._canvas.addEventListener( eventName , Jsometric._eventListenerHandler, useCapture);
         return true;
     },
-    disablecanvasContextManu: function(){
-        el.addEventListener('contextmenu', function(e){ e.preventDefault() }, false );
-    },
-    getWindowSize: function(){
-        return {
-            width  : window.innerWidth,
-            height : window.innerHeight
-        };
-    },
     canvas:function( CSSSelector ){
         let el = document.querySelector( CSSSelector );
-
         Jsometric._canvas=el;
-
         let offscreen = el.transferControlToOffscreen();
         //return new Jsometric.TransferableObject( offscreen );
+        offscreen.width  = el.offsetWidth;
+        offscreen.height = el.offsetHeight;
         offscreen =  new Jsometric.TransferableObject( offscreen );
 
-        //renderer.postMessage({ type:'response', response:offscreen.data },[offscreen.data]);
-        return offscreen
+        //
+        var target = document.querySelector('#viewport');
+        var ro = new ResizeObserver( entries => {
+            el.dispatchEvent(VIEWPORT_RESIZE_EVENT);
+        });
+        ro.observe(target);
+
+        return offscreen;
     }
 };
 
