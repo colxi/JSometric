@@ -1,0 +1,72 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="style.css">
+    </head>
+    <body>
+        <div id="test"></div>
+        <div style="display:none">
+            <div tyle="float:left">
+                <canvas id="tools" width="320" height="430"></canvas>
+            </div>
+            <div>
+                <div id="exportbut" class="but">EXPORT MAP</div>
+                <div id="importbut" class="but">IMPORT MAP</div>
+                <div class="clear"></div>
+                <textarea id="export"></textarea>
+            </div>
+        </div>
+    </body>
+    <script src="demo.js" type="module"></script>
+    <script>
+
+// Map.Tileset.tile set tools
+var tools_canvas    = document.getElementById('tools');
+var tools_c         = tools_canvas.getContext('2d');
+var current_tool  = 1;
+let tileSelectorScale = 0.25;
+tools_c.scale(tileSelectorScale, tileSelectorScale);
+
+
+tools.onclick = function(event){
+    tools_c.clearRect (0, 0, Jsometric.Map.width, Jsometric.Map.height);
+    tools_c.drawImage(
+        Jsometric.Map.Tileset.image,
+        0, //x
+        0, //y
+        Jsometric.Map.Tileset.width,
+        Jsometric.Map.Tileset.height,
+        0,
+        0,
+        Jsometric.Map.Tileset.width,
+        Jsometric.Map.Tileset.height,
+    );
+
+    let tileX= Math.floor(event.offsetX/ (Jsometric.Map.Tileset.tileWidth*tileSelectorScale));  // 32 es 64 a escala
+    let tileY= Math.floor(event.offsetY/ (Jsometric.Map.Tileset.tileHeight*tileSelectorScale) );
+    current_tool = (tileY) * Jsometric.Map.Tileset.columns + tileX ;
+    console.log(current_tool)
+    tools_c.beginPath();
+    tools_c.rect(
+        tileX*Jsometric.Map.Tileset.tileWidth,
+        tileY*Jsometric.Map.Tileset.tileHeight,
+        Jsometric.Map.Tileset.tileWidth,
+        Jsometric.Map.Tileset.tileHeight
+    );
+    tools_c.lineWidth = 2;
+    tools_c.strokeStyle = 'red';
+    tools_c.stroke();
+};
+
+// buttons listeners
+
+document.getElementById('exportbut').onclick = function(){
+    document.getElementById('export').value = JSON.stringify(Jsometric.Map.tileData)
+}
+
+document.getElementById('importbut').onclick = function(){
+    Jsometric.Map.tileData = JSON.parse(document.getElementById('export').value)
+}
+
+    </script>
+</html>
+

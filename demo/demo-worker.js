@@ -2,7 +2,7 @@
 * @Author: colxi
 * @Date:   2018-10-25 16:46:42
 * @Last Modified by:   colxi
-* @Last Modified time: 2018-10-29 02:22:19
+* @Last Modified time: 2018-10-30 01:30:12
 */
 
 let Viewport;
@@ -10,9 +10,9 @@ let Viewport;
     Jsometric.Request.logRequests=true;
     Jsometric.Request.logResponses=true;
     //  Jsometric.Request.logEvents=true;
-    //
-    //let _canvas = await Jsometric.createCanvas( '#container' );
-    Viewport = await new Jsometric.Viewport( '#viewport', 'demo-128' );
+
+    Viewport = await new Jsometric.Viewport( 'test', 'demo-128.json' );
+
     Viewport.edgeScrolling     = true;
     Viewport.mouseWheelZoom    = true;
 
@@ -25,7 +25,7 @@ let Viewport;
 
     // handle canvas right click
     Jsometric.Events.addListener('click', e=>{
-        console.log(Viewport.Scroll.x, offsetX, Viewport.Scale.current);
+        console.log('right click');
     });
 
     // handle canvas left click

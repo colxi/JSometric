@@ -2,7 +2,7 @@
 * @Author: colxi
 * @Date:   2018-10-24 10:41:32
 * @Last Modified by:   colxi
-* @Last Modified time: 2018-10-29 02:23:32
+* @Last Modified time: 2018-10-30 01:21:26
 */
 
 /* global Jsometric */
@@ -13,15 +13,19 @@ Jsometric.Viewport = class Viewport{
      * @param  {[offscreenCanvas]}  canvas
      * @param  {[object]}           map
      */
-    constructor( canvas, map ) {
+    constructor( containerId , map ) {
         return (async () => {
-            this.Canvas  = await Jsometric.retrieveCanvas( canvas );
+            // Generate Canvas layers in DOM, and retrieve the
+            // offscreenCanvas references.
+            let canvasLayers = await Jsometric.Request('initialize', containerId);
+            if(!canvasLayers) throw new Error('Viewport.constructor() : Failed retrieving Container');
+
+            this.Canvas = canvasLayers[0];
             this.Map     = await Jsometric.Map.load( map );
 
-            // store Map Tileset reference
-            this.Tileset = this.Map.Tileset;
             // store canvas 2d context
             this.Context = this.Canvas.getContext('2d');
+
             // Group to store Viewport Scroll absolute coordinates
             this.Scroll = {
                 x : 0,
@@ -48,6 +52,7 @@ Jsometric.Viewport = class Viewport{
                 x : Math.round( this.Canvas.width  / 2 ),
                 y : Math.round( this.Canvas.height / 2 )
             };
+
             // Internal Event handlers properties
             this.__trackMouseHandler     = undefined;
             this.__mouseWheelZoomHandler = undefined;
@@ -56,6 +61,7 @@ Jsometric.Viewport = class Viewport{
             this.edgeScrolling = false;
 
             this.fps=0;
+
             this.fpsAverage = 0;
             this.fpsLast =[];
             this.lastFrameTimestamp =Date.now();
@@ -64,6 +70,7 @@ Jsometric.Viewport = class Viewport{
             //
             // CONFIGURE Viewport Instance
             //
+            this.imageSmoothing = false
             // Track Mouse : trigger the trackMouse setter (async)
             this.trackMouse = true;
             // Mouse Wheel Zoom :  trigger the mouseWheelZoom setter
@@ -93,7 +100,6 @@ Jsometric.Viewport = class Viewport{
 
             return this; // when done
         })();
-
     }
 
     /**
@@ -292,9 +298,9 @@ Jsometric.Viewport = class Viewport{
         const mapY = y + ( this.Scroll.y * this.Scale.current );
 
         // get tile scaled sizes
-        let tilewidth  = this.Tileset.tileWidth * this.Scale.current;
-        let tileHeight = this.Tileset.tileHeight * this.Scale.current;
-        let tileOffset = this.Tileset.tileOffset * this.Scale.current;
+        let tilewidth  = this.Map.Tileset.tileWidth * this.Scale.current;
+        let tileHeight = this.Map.Tileset.tileHeight * this.Scale.current;
+        let tileOffset = this.Map.Tileset.tileOffset * this.Scale.current;
         // calculate tile  under mouse coordinates
         const tileRow = mapX/tilewidth + mapY/(tileHeight-tileOffset) -1 -1;
         const tileCol = mapX/( tileHeight-tileOffset) - tileRow - 1;
@@ -313,8 +319,8 @@ Jsometric.Viewport = class Viewport{
         return tile;
     }
     getTileCoordinates(column ,row){
-        let x = (row * this.Tileset.tileWidth / 2) + (column * this.Tileset.tileWidth / 2) - this.Scroll.x;
-        let y = (row * (this.Tileset.tileHeight - this.Tileset.tileOffset) / 2)-(column * (this.Tileset.tileHeight - this.Tileset.tileOffset) / 2)  - this.Scroll.y;
+        let x = (row * this.Map.Tileset.tileWidth / 2) + (column * this.Map.Tileset.tileWidth / 2) - this.Scroll.x;
+        let y = (row * (this.Map.Tileset.tileHeight - this.Map.Tileset.tileOffset) / 2)-(column * (this.Map.Tileset.tileHeight - this.Map.Tileset.tileOffset) / 2)  - this.Scroll.y;
 
         // avoid floating point coordinates , convert to integers
         x = Math.round(x) ;

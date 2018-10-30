@@ -2,7 +2,7 @@
 * @Author: colxi
 * @Date:   2018-10-24 10:41:32
 * @Last Modified by:   colxi
-* @Last Modified time: 2018-10-27 14:34:14
+* @Last Modified time: 2018-10-29 14:29:10
 */
 
 Jsometric.Request = (function(){
@@ -42,6 +42,7 @@ Jsometric.Request = (function(){
 
     return function(method, args){
         requestId++;
+        if( !Array.isArray(args) ) args = [ args ];
         return new Promise( (resolve)=>{
             requestResolver[requestId] = resolve;
             let msg ={
@@ -58,7 +59,7 @@ Jsometric.Request = (function(){
 })();
 
 
-Jsometric.Request.logRequests = false;
+Jsometric.Request.logRequests  = false;
 Jsometric.Request.logResponses = false;
 Jsometric.Request.logEvents    = false;
 

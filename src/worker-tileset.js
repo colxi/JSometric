@@ -1,11 +1,12 @@
 
 Jsometric.Tileset = {};
 
-Jsometric.Tileset.load = async function( name ){
+Jsometric.Tileset.load = async function( filename ){
     let Tileset;
-
-    let jsonTileset = await fetch(`../tilesets/${name}.json`);
-    if( jsonTileset.status !== 200) throw new Error(`Tileset '${name}.json' not found.`)
+    filename = `${BASE_URL}tilesets/${filename}`;
+    console.log('[worker] : Loading Tileset definition file...', filename);
+    let jsonTileset = await fetch(filename);
+    if( jsonTileset.status !== 200) throw new Error(`Tileset '${filename}' not found.`);
 
     jsonTileset = await jsonTileset.json();
     Tileset = {
@@ -28,9 +29,8 @@ Jsometric.Tileset.load = async function( name ){
         let tileCol = Tileset.columns- (((tileRow+1) * Tileset.columns)-i);
         Tileset.tile[i] =[tileCol,tileRow];
     }
-
-    let tilesetImage = await fetch( `../tilesets/${Tileset.source}` );
-    if( tilesetImage.status !== 200) throw new Error(`Tileset Image source '${Tileset.source}' not found.`)
+    let tilesetImage = await fetch( `${BASE_URL}tilesets/${Tileset.source}`);
+    if( tilesetImage.status !== 200) throw new Error(`Tileset Image source '${BASE_URL}tilesets/${Tileset.source}' not found.`);
 
     tilesetImage = await tilesetImage.blob();
     Tileset.image = await createImageBitmap( tilesetImage );

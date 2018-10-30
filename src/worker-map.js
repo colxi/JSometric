@@ -1,10 +1,12 @@
 
 Jsometric.Map = {};
 
-Jsometric.Map.load = async function( name ){
+Jsometric.Map.load = async function( filename ){
     let jsonMap;
-    jsonMap = await fetch(`./../maps/${name}.json`);
-    if( jsonMap.status !== 200) throw new Error(`Map '${name}.json' not found.`)
+    filename = BASE_URL + 'maps/'+filename;
+    console.log('[worker] : Loading map definition file...', filename)
+    jsonMap = await fetch(filename)
+    if( jsonMap.status !== 200) throw new Error(`Map '${filename}' not found.`)
     jsonMap = await jsonMap.json();
     let Map = {
         name     : jsonMap.name,
@@ -19,5 +21,5 @@ Jsometric.Map.load = async function( name ){
     return Map;
 };
 
-Jsometric.generate = function(){};
+Jsometric.Map.generate = function(){};
 
