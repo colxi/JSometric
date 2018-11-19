@@ -3,22 +3,17 @@
         <link rel="stylesheet" type="text/css" href="style.css">
     </head>
     <body>
-        <div id="test"></div>
-        <div style="display:none">
-            <div tyle="float:left">
-                <canvas id="tools" width="320" height="430"></canvas>
+        <div id="container" style="position: absolute;left: 0px;right: 0px;bottom: 0px;top: 0px;grid-template-rows: 1fr auto; display: grid;">
+            <div style="background: red;grid-row: 1;overflow-y: scroll;">
+                <div id="tilemap"></div>
+                <canvas id="tilemap-canvas" style='border:1px solid red'></canvas>
             </div>
-            <div>
-                <div id="exportbut" class="but">EXPORT MAP</div>
-                <div id="importbut" class="but">IMPORT MAP</div>
-                <div class="clear"></div>
-                <textarea id="export"></textarea>
-            </div>
+            <div id='myPanel'></div>
         </div>
     </body>
-    <script src="demo.js" type="module"></script>
+    <script src="editor.js" type="module"></script>
     <script>
-
+/*
 // Map.Tileset.tile set tools
 var tools_canvas    = document.getElementById('tools');
 var tools_c         = tools_canvas.getContext('2d');
@@ -66,7 +61,7 @@ document.getElementById('exportbut').onclick = function(){
 document.getElementById('importbut').onclick = function(){
     Jsometric.Map.tileData = JSON.parse(document.getElementById('export').value)
 }
-
+*/
     </script>
 </html>
 

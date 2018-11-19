@@ -1,0 +1,16 @@
+/*
+* @Author: colxi
+* @Date:   2018-10-29 19:03:40
+* @Last Modified by:   colxi
+* @Last Modified time: 2018-10-30 09:16:12
+*/
+html,body{
+    overflow : hidden;
+}
+
+#test{
+    width: 100%;
+    height: 100%;
+}
+
+

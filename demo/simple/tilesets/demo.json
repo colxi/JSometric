@@ -1,0 +1,12 @@
+{
+    "_type_"     : "tileset",
+    "name"       : "demo",
+    "columns"    : 10,
+    "rows"       : 30,
+    "source"     : "part4_tileset.png",
+    "width"      : 640,
+    "height"     : 1024,
+    "tileWidth"  : 64,
+    "tileHeight" : 64,
+    "tileOffset" : 32
+}

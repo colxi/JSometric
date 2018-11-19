@@ -1,0 +1,177 @@
+/*
+* @Author: colxi
+* @Date:   2018-10-30 20:41:41
+* @Last Modified by:   colxi
+* @Last Modified time: 2018-11-05 21:22:28
+*/
+
+input[type='number'] { -moz-appearance:textfield; }
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
+input:focus, select:focus, textarea:focus, button:focus { outline: none; }
+input:focus{ border-bottom:1px solid green !important; }
+
+#debuggerPanel-tab-viewport{
+    padding:20px;
+}
+
+#sprites-tab{
+    position: relative;
+    display: grid;
+    grid-template-columns: 200px auto;
+    height: 100%;
+    width: 100%;
+    user-select: none;
+}
+
+
+/*****************************************************************************/
+/* SIDE MENU                                                                 */
+/*****************************************************************************/
+
+#spriteSideMenu{
+    grid-column:1;
+    border: 1px solid #3a3939;
+    position: relative;
+    height: 100%;
+}
+
+
+#spriteSideMenu #newSpriteButton{
+    margin:10px;
+}
+
+#spriteSideMenu #spriteListOutter{
+    top: 45px;
+    bottom: 0px;
+    position: absolute;
+    overflow-y: scroll;
+    margin: 10px;
+    left: 0px;
+    right: 0px;
+}
+
+#spriteSideMenu #spriteListOutter > div > div{
+    margin-bottom: 5px;
+    padding: 5px;
+    margin-right: 10px;
+    cursor:pointer;
+}
+
+#spriteSideMenu #spriteListOutter > div > div:hover{
+    background: red;
+}
+
+#spriteSideMenu #spriteListOutter > div > div[selected]{
+    background: #28c828;
+    color: black;
+}
+
+
+
+
+/*****************************************************************************/
+/* SPRITE EDITOR                                                             */
+/*****************************************************************************/
+
+#spritesEditor{
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: 200px auto 200px;
+    justify-content: center;
+
+}
+
+#spriteData{
+    grid-column:1;
+    align-self: center;
+    padding: 20px;
+}
+
+input[type="text"], input[type="number"]{
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #3a3939;
+    color: white;
+    text-align: center;
+    margin-bottom: 15px;
+}
+#spriteWidth, #spriteHeight{ width:40px }
+
+#spritePreviewContainer{
+    grid-column:2;
+    text-align: center;
+    align-self: center;
+    padding: 20px;}
+
+#spriteFrames{
+    grid-column:3;
+    align-self: center;
+    padding:20px;
+}
+
+
+
+#spritePreviewUp{
+}
+
+#spritePreviewDown{
+}
+
+#spritePreviewMidleRow{
+    display:table
+}
+#spritePreviewLeft{
+    padding: 10px;
+    vertical-align: middle;
+    display: table-cell;
+}
+
+ #spritePreviewRight{
+    padding: 10px;
+    vertical-align: middle;
+    display: table-cell;
+}
+
+
+#spriteFrameCoords{
+    padding-left:20px;
+    margin-top:20px;
+    margin-bottom:10px;
+}
+
+
+#spriteFrameAdd{
+    margin-bottom:30px;
+    margin-left: 35px;
+}
+
+
+#spriteFrameRemove{
+    margin-bottom:0;
+    margin-left: 35px;
+}
+
+
+.button{
+    padding:5px;
+    background:#3a3939;
+    cursor:pointer;
+    text-align:center;
+}
+
+.button-circle{
+    width: 40px;
+    height: 40px;
+    border-radius: 100%;
+    text-align: center;
+    line-height: 36px;
+    font-size: 20px;
+    background: #3a3939;
+}
+
+.button:hover{
+    padding:5px;
+    background:grey;
+    cursor:pointer;
+    text-align:center;
+}
